@@ -1,9 +1,10 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use ieee.numeric_std.all; 
 
 
-entity Clothes_washer is
+entity clothes_washer is
 	port(
 		--inputs
 			timer: in std_logic_vector(3 downto 0);			-- dal timer 4bit
@@ -30,9 +31,10 @@ entity Clothes_washer is
 			state_LED: out std_logic);								-- LED/CICALINO DI OUTPUT (settare diversamente ad esempio fare on off quando è finito)
 
 	
-end Clothes_washer;
+end clothes_washer;
 
-architecture Behavioral of Clothes_washer is
+architecture behavior of clothes_washer is
+
 type state_type is (zero,one,two,three,four,five,six,seven,eigth);--INSERIRE STATO 8 
 signal state_current, state_next: state_type;
 
@@ -70,6 +72,7 @@ State_register : process(clk)
 					if (timer = "0111")then 
 						state_current<= state_next;
 					end if;
+				when others => state_current <= state_next;
 					
 				end case;
 				
@@ -131,6 +134,9 @@ next_state_logic: process(state_current, door_open, spin_dry, start_wash)
 			state_next <= eigth;
 		
 		when eigth =>
+			state_next <= zero;
+			
+		when others =>
 			state_next <= zero;
 	
 		end case;
@@ -220,6 +226,14 @@ output_logic:process(reset,state_current,clk,mode)
 				rotate_drum<="00";
 				drain<='0';
 				temperature<="00";
+				
+			when others =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
 
 			end case;
 			
@@ -292,6 +306,14 @@ output_logic:process(reset,state_current,clk,mode)
 				temperature<="00";
 				
 			when eigth =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+			
+			when others =>
 				door_lock <='0';
 				water_pump<='0';
 				soap<='0';
@@ -376,6 +398,14 @@ output_logic:process(reset,state_current,clk,mode)
 				rotate_drum<="00";
 				drain<='0';
 				temperature<="00";
+				
+			when others =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
 
 			end case;
 			
@@ -454,10 +484,25 @@ output_logic:process(reset,state_current,clk,mode)
 				rotate_drum<="00";
 				drain<='0';
 				temperature<="00";
+				
+			when others =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
 
 			end case;
 			
-		
+		when others =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				
 		end case;
 		
 		elsif reset='1' then
@@ -470,7 +515,7 @@ output_logic:process(reset,state_current,clk,mode)
 		end if;
 	end process;
 
-end Behavioral;
+end behavior;
 
 --SEQUENCE WHEN NOT spin dry
 --                                 decimal equivalent

@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 
 entity top is
 	generic(
@@ -32,7 +33,7 @@ end top;
 architecture bh of top is
 
 
-	component Clothes_washer
+	component clothes_washer
 		port(
 		--inputs
 			timer: in std_logic_vector(3 downto 0);			-- dal timer 4bit
@@ -79,7 +80,7 @@ architecture bh of top is
 	begin 
 	
 	timer: count4 port map (clk,reset,timerr);
-	cloth_wash: Clothes_washer port map (timerr,clk,spin_dry,start_wash,Door_open,reset,mode,door_lock,water_pump,soap,temp_duty,drum_velocity_duty,drain,state_LED);
+	cloth_wash: clothes_washer port map (timerr,clk,spin_dry,start_wash,Door_open,reset,mode,door_lock,water_pump,soap,temp_duty,drum_velocity_duty,drain,state_LED);
 	pwm_drum: pwm
 		generic map (n=>n,clock_div=>clock_div)
 		port map (clk=>clk, reset=>reset, duty=>drum_velocity_duty, pwm_out=>rotate_drum_PWM_OUT);
