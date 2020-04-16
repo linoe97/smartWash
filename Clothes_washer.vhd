@@ -1,157 +1,610 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+use ieee.numeric_std.all; 
 
 
-entity Clothes_washer is
-port(
-	--inputs
-		clk: in std_logic;	         --INVECE DEL CLOCK N BIT DI TIMER
-		spin_dry: std_logic; 			--asciuga ON/OFF
-		start_wash: std_logic; 			--START
-		Door_open: in std_logic; 		--SENSORE PORTA
-		reset: in std_logic;    		--RESET
+entity clothes_washer is
+	port(
+		--inputs
+			timer: in std_logic_vector(3 downto 0);			-- dal timer 4bit
+			clk: in std_logic;	         						-- INVECE DEL CLOCK N BIT DI TIMER
+			spin_dry: std_logic; 									-- asciuga ON/OFF
+			start_wash: std_logic; 									-- START
+			Door_open: in std_logic; 								-- SENSORE PORTA
+			reset: in std_logic;    								-- RESET
+			mode: in std_logic_vector(1 downto 0); 			-- 3 o 4 differenti modalità (normale, full power, eco e lana(wool) )
+			
+			--inserire un input di timer (durata di ogni stato) anzichè il clock
+			--e fare in modo che per ogni modalità ci sia una differente durata
+			--when 0010
+			--when 0111
+			--when 1111
+
+		--outputs							
+			door_lock: out std_logic;								-- BLOCCO PORTO
+			water_pump: out std_logic;    						-- POMPA ACQUA
+			soap: out std_logic;										-- POMPA SAPONE
+			temperature: out std_logic_vector(1 downto 0);	-- livelo temperatura
+			rotate_drum: out std_logic_vector(1 downto 0);  -- velocità MOTORE
+			drain: out std_logic;          						-- DRENARE L'ACQUA
+			state_LED: out std_logic;								-- LED/CICALINO DI OUTPUT (settare diversamente ad esempio fare on off quando è finito)
+			counter_reset: out std_logic);						-- resets the counter on state change
+
+	
+end clothes_washer;
+
+architecture behavior of clothes_washer is
+
+type state_type is (zero,one,one_reset,two,two_reset,three,three_reset,four,four_reset,five,five_reset,six,six_reset,seven,seven_reset,eigth);--INSERIRE STATO 8 
+signal state_current, state_next: state_type;
+
+
+begin
+
+
+
+reset_auto: process(state_current)
+begin
+		if state_current=zero or state_current=eigth then
+			counter_reset<='1';
+		elsif state_current=one or state_current=two or state_current=three or state_current=four or state_current=five or state_current=six or state_current= seven then
+			counter_reset<='0';
+		else 
+			counter_reset<='1';
+		end if;
+end process;
+
+
+
+State_register : process(clk)
+	begin
 		
-	--outputs							
-		door_lock: out std_logic;		-- BLOCCO PORTO
-		water_pump: out std_logic;    -- POMPA ACQUA
-		soap: out std_logic;				-- POMPA SAPONE
-		rotate_drum: out std_logic;   -- MOTORE
-		drain: out std_logic          -- DRENARE L'ACQUA
-		--LED/CICALINO DI OUTPUT
-);
+		if rising_edge(clk) then 
+		
+				if state_current=zero or state_current=eigth then
+						state_current<= state_next;
+						
+				elsif (state_current=two or state_current= five) then
+				
+					case mode is 
+						
+					--implementazione delle varie durate
+					-- normale				
+					when "00" => 
+						if (timer = "0111")then 
+							state_current<= state_next;							
+						end if;
+					--eco
+					when "01" => 
+						if (timer = "0011")then 
+							state_current<= state_next;
+						end if;
+					--fullpower
+					when "10" => 
+						if (timer = "1111")then 
+							state_current<= state_next;
+						end if;
+					--wool
+					when "11" => 
+						if (timer = "0111")then 
+							state_current<= state_next;
+						end if;
+					when others => state_current <= state_next;
 
-end Clothes_washer;
-
-architecture Behavioral of Clothes_washer is
-TYPE state_type IS (zero,one,two,three,four,five,six,seven);--INSERIRE STATO 8 
-SIGNAL state: state_type;
-
-
-begin
-
-next_state_logic: process(clk)
-begin
-if(clk'event and clk='1') then
-case state is
-
-when zero =>
-if door_open = '1' then
- if start_wash = '0' then
-  state <= zero;
-  end if;
-elsif door_open = '0'  then
-if start_wash='1' then
-state <= one;
-
-end if;
-end if;
-
-when one =>
-state <= two;
-
-when two =>
-state <= three;
-
-when three =>
-state <= four;
-
-when four =>
-state <= five;
-
-when five =>
-state <= six;
-
-when six =>
-if (spin_dry='0')then
-state <= zero;
-
-elsif (spin_dry='1') then
-state <= seven;
-
-end if;
-
-when seven =>
-state <= zero;
+					end case;
+					
+				elsif (state_current=seven) then
+					if timer = "1111" then 
+							state_current<= state_next;						
+					end if;
+				
+				elsif state_current=three or state_current=four or  state_current=six then
+					if timer = "0011" then 
+							state_current<= state_next;
+						
+					end if;
+				else
+					state_current<= state_next;
+				end if;
+					
+		end if;
+				
+	end process; 
 
 
-end case;
-end if;
-end process;
+	--NEXT STATE LOGIC
 
-output_logic:process(reset,state,clk)
-begin
+next_state_logic: process(state_current, door_open, spin_dry, start_wash)
+	begin
+		
+		case state_current is
 
-if reset = '0' then
-case state is
+		when zero =>
+			if door_open = '1' then
+				if start_wash = '0' then
+					state_next <= zero;
+				end if;
+			elsif door_open = '0'  then
+				if start_wash='1' then
+					state_next <= one;
+				end if;
+			end if;
 
-when zero =>
-door_lock <='0';
-water_pump<='0';
-soap<='0';
-rotate_drum<='0';
-drain<='0';
+		when one =>
+			state_next <= one_reset;
+			
+		when one_reset =>
+			state_next <= two;
 
-when one =>
-door_lock <='1';
-water_pump<='1';
-soap<='1';
-rotate_drum<='0';
-drain<='0';
+		when two =>
+			state_next <= two_reset;
+			
+		when two_reset =>
+			state_next <= three;
 
-when two =>
-door_lock <='1';
-water_pump<='0';
-soap<='0';
-rotate_drum<='1';
-drain<='0';
+		when three =>
+			state_next <= three_reset;
+			
+		when three_reset =>
+			state_next <= four;
 
-when three =>
-door_lock <='1';
-water_pump<='0';
-soap<='0';
-rotate_drum<='0';
-drain<='1';
+		when four =>
+			state_next <= four_reset;
+			
+		when four_reset =>
+			state_next <= five;
 
-when four =>
-door_lock <='1';
-water_pump<='1';
-soap<='0';
-rotate_drum<='0';
-drain<='0';
+		when five =>
+			state_next <= five_reset;
+			
+		when five_reset =>
+			state_next <= six;
 
-when five =>
-door_lock <='1';
-water_pump<='0';
-soap<='0';
-rotate_drum<='1';
-drain<='0';
+		when six =>
+			state_next <= six_reset;
+		
+		when six_reset =>
+			if (spin_dry='0')then
+				state_next <= eigth;
+			elsif (spin_dry='1') then
+				state_next <= seven;
+			end if;
 
-when six =>
+		when seven =>
+			state_next <= seven_reset;
+			
+		when seven_reset=>
+			state_next <= eigth;
+		
+		when eigth =>
+			if 	door_open = '1' then
+				state_next <= zero;
+			elsif door_open = '0'  then
+				state_next <= eigth;
+			end if;
+			
+		when others =>
+			state_next <= zero;
+	
+		end case;
+		
+	end process;
 
-door_lock <='1';
-water_pump<='0';
-soap<='0';
-rotate_drum<='0';
-drain<='1';
+	--OUTPUT LOGIC
+output_logic:process(reset,state_current,clk,mode)
+	begin
 
-when seven =>
-door_lock <='1';
-water_pump<='0';
-soap<='0';
-rotate_drum<='1';
-drain<='1';
+		if reset = '0' then
+			
+			case mode is 
+			
+			--normal mode
+			
+			when "00" => 
+			case state_current is
+			when zero =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="00";
+				state_LED<='0';
 
-end case;
-elsif reset='1' then
-door_lock <='0';
-water_pump<='0';
-soap<='0';
-rotate_drum<='0';
-drain<='0';
-end if;
-end process;
+			when one =>
+				door_lock <='1';
+				water_pump<='1';
+				soap<='1';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="11";
+				state_LED<='1';
 
-end Behavioral;
+			when two =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="10";
+				state_LED<='1';
+
+			when three =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+
+			when four =>
+				door_lock <='1';
+				water_pump<='1';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<='1';
+
+			when five =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="00";
+				state_LED<='1';
+
+			when six =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+
+			when seven =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+				
+			when eigth =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<=clk;
+				
+			when others =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<='0';
+
+			end case;
+			
+			--eco mode
+			
+			when "01" => 
+			case state_current is
+			when zero =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="00";
+				state_LED<='0';
+
+			when one =>
+				door_lock <='1';
+				water_pump<='1';
+				soap<='1';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="11";
+				state_LED<='1';
+
+			when two =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="10";
+				state_LED<='1';
+
+			when three =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+
+			when four =>
+				door_lock <='1';
+				water_pump<='1';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<='1';
+
+			when five =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="00";
+				state_LED<='1';
+
+			when six =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+
+			when seven =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+				
+			when eigth =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<=clk;
+			
+			when others =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<='0';
+
+			end case;
+			
+			--full power mode
+			
+			when "10" => 
+			case state_current is
+			when zero =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="00";
+				state_LED<='0';
+				
+			when one =>
+				door_lock <='1';
+				water_pump<='1';
+				soap<='1';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="11";
+				state_LED<='1';
+
+			when two =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="10";
+				state_LED<='1';
+
+			when three =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+
+			when four =>
+				door_lock <='1';
+				water_pump<='1';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<='1';
+
+			when five =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="00";
+				state_LED<='1';
+
+			when six =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+
+			when seven =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+				
+			when eigth =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<=clk;
+				
+			when others =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<='0';
+
+			end case;
+			
+			--wool mode
+			
+			when "11" => 			
+			case state_current is
+			when zero =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="00";
+				state_LED<='0';
+
+			when one =>
+				door_lock <='1';
+				water_pump<='1';
+				soap<='1';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<='1';
+
+			when two =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="00";
+				state_LED<='1';
+
+			when three =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+
+			when four =>
+				door_lock <='1';
+				water_pump<='1';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<='1';
+				
+			when five =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='0';
+				temperature<="00";
+				state_LED<='1';
+
+			when six =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+
+			when seven =>
+				door_lock <='1';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="11";
+				drain<='1';
+				temperature<="00";
+				state_LED<='1';
+				
+			when eigth =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<=clk;
+				
+			when others =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				state_LED<='0';
+
+			end case;
+			
+		when others =>
+				door_lock <='0';
+				water_pump<='0';
+				soap<='0';
+				rotate_drum<="00";
+				drain<='0';
+				temperature<="00";
+				
+		end case;
+		
+		elsif reset='1' then
+			door_lock <='0';
+			water_pump<='0';
+			soap<='0';
+			rotate_drum<="00";
+			drain<='0';
+			temperature<="00";
+		end if;
+	end process;
+
+end behavior;
+
 
 --SEQUENCE WHEN NOT spin dry
 --                                 decimal equivalent
