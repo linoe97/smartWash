@@ -9,8 +9,8 @@ entity clothes_washer is
 		--inputs
 			timer: in std_logic_vector(3 downto 0);			-- dal timer 4bit
 			clk: in std_logic;	         						-- INVECE DEL CLOCK N BIT DI TIMER
-			spin_dry: std_logic; 									-- asciuga ON/OFF
-			start_wash: std_logic; 									-- START
+			spin_dry: in std_logic; 								-- asciuga ON/OFF
+			start_wash: in std_logic; 								-- START
 			Door_open: in std_logic; 								-- SENSORE PORTA
 			reset: in std_logic;    								-- RESET
 			mode: in std_logic_vector(1 downto 0); 			-- 3 o 4 differenti modalità (normale, full power, eco e lana(wool) )
@@ -99,7 +99,7 @@ State_register : process(clk)
 							state_current<= state_next;						
 					end if;
 				
-				elsif state_current=three or state_current=four or  state_current=six then
+				elsif state_current=one or state_current=three or state_current=four or  state_current=six then
 					if timer = "0011" then 
 							state_current<= state_next;
 						
@@ -207,7 +207,7 @@ output_logic:process(reset,state_current,clk,mode)
 				door_lock <='0';
 				water_pump<='0';
 				soap<='0';
-				rotate_drum<="11";
+				rotate_drum<="00";
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
@@ -303,7 +303,7 @@ output_logic:process(reset,state_current,clk,mode)
 				door_lock <='0';
 				water_pump<='0';
 				soap<='0';
-				rotate_drum<="11";
+				rotate_drum<="00";
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
@@ -399,7 +399,7 @@ output_logic:process(reset,state_current,clk,mode)
 				door_lock <='0';
 				water_pump<='0';
 				soap<='0';
-				rotate_drum<="11";
+				rotate_drum<="00";
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
@@ -495,7 +495,7 @@ output_logic:process(reset,state_current,clk,mode)
 				door_lock <='0';
 				water_pump<='0';
 				soap<='0';
-				rotate_drum<="11";
+				rotate_drum<="00";
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
@@ -594,7 +594,7 @@ output_logic:process(reset,state_current,clk,mode)
 		end case;
 		
 		elsif reset='1' then
-			door_lock <='0';
+			door_lock <='1';
 			water_pump<='0';
 			soap<='0';
 			rotate_drum<="00";
