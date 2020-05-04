@@ -7,8 +7,8 @@ use ieee.numeric_std.all;
 
 
 entity pwm is
-    generic (   n : integer := 2; 			-- 4 bit resolution
-                clock_div : integer := 4  --frequency divider rate (to set output frequency)
+    generic (   n : integer := 2; 			--2 bit resolution
+                clock_div : integer := 1  --frequency divider rate (to set output frequency) //è il massimo di counter_clk_div
                 );
     port (  clk, reset : in std_logic;
             duty : in std_logic_vector (n-1 downto 0);
@@ -23,7 +23,7 @@ architecture behavioral of pwm is
 
 begin
 
-   --frequency divider
+   --frequency divider   (needed if frequency is too fast)
 	proc_clk_div : process (clk) begin
 		 if rising_edge(clk) then
 			  clk_div <= '0';
@@ -50,6 +50,13 @@ begin
 		 end if;
 	end process;
 
-pwm_out <= '1' when counter < to_integer(unsigned(duty)) else '0';
+pwm_out <= '1' when counter < to_integer(unsigned(duty)) else '0'; 
+
+--       duty: 10
+
+--output: 00 -> 1
+--			 01 -> 1
+--        10 -> 0
+--			 11 -> 0
 
 end behavioral;
