@@ -24,7 +24,8 @@ entity top is
 			temperature_PWM_OUT: out std_logic;					-- livelo temperatura
 			rotate_drum_PWM_OUT: out std_logic;  				-- velocità MOTORE
 			drain: out std_logic;          						-- DRENARE L'ACQUA
-			state_LED: out std_logic								-- LED/CICALINO DI OUTPUT (settare diversamente ad esempio fare on off quando è finito)	
+			state_LED: out std_logic;			              -- LED/CICALINO DI OUTPUT (settare diversamente ad esempio fare on off quando è finito)	
+			sev_seg: out std_logic_vector(6 downto 0)
 	);
 end top;
 
@@ -51,7 +52,8 @@ architecture bh of top is
 			rotate_drum: out std_logic_vector(1 downto 0);  -- velocità MOTORE
 			drain: out std_logic;          						-- DRENARE L'ACQUA
 			state_LED: out std_logic;								-- LED/CICALINO DI OUTPUT (settare diversamente ad esempio fare on off quando è finito)
-			counter_reset: out std_logic						-- resets the counter on state change
+			counter_reset: out std_logic;						   -- resets the counter on state change
+			bcd_out: out std_logic_vector(3 downto 0)
 		);
 	end component;
 	
@@ -72,17 +74,27 @@ architecture bh of top is
             pwm_out : out std_logic
       );
 	end component;
+	   
+	
+	
+	
+	component bcd_7seg is
+		port (BCD : in STD_LOGIC_VECTOR (3 downto 0);
+					sev_seg : out STD_LOGIC_VECTOR (6 downto 0)
+			);
+	end component;
 	
 	signal reset_counter			: std_logic;
 	signal timerr 					: std_logic_vector(3 downto 0);
 	signal drum_velocity_duty 	: std_logic_vector(1 downto 0);
 	signal temp_duty 				: std_logic_vector(1 downto 0);
+	signal BCD_sign				: std_logic_vector(3 downto 0);
 	
 	
 	begin 
 	
 	
-	cloth_wash: clothes_washer port map (timerr,clk,spin_dry,start_wash,Door_open,reset,mode,door_lock,water_pump,soap,temp_duty,drum_velocity_duty,drain,state_LED,reset_counter);
+	cloth_wash: clothes_washer port map (timerr,clk,spin_dry,start_wash,Door_open,reset,mode,door_lock,water_pump,soap,temp_duty,drum_velocity_duty,drain,state_LED,reset_counter,BCD_sign);
 	timer: count4 port map (clk,reset,reset_counter,timerr);
 	pwm_drum: pwm
 		generic map (n=>n,clock_div=>clock_div)
@@ -90,5 +102,6 @@ architecture bh of top is
 	pwm_temp: pwm
 		generic map (n=>n, clock_div=>clock_div)
 		port map (clk=>clk, reset=>reset,duty=>temp_duty,pwm_out=>temperature_PWM_OUT);
+	bcd_sev_seg: bcd_7seg port map (BCD_sign, sev_seg);
 	
 	end;
