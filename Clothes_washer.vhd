@@ -29,7 +29,8 @@ entity clothes_washer is
 			rotate_drum: out std_logic_vector(1 downto 0);  -- velocità MOTORE
 			drain: out std_logic;          						-- DRENARE L'ACQUA
 			state_LED: out std_logic;								-- LED/CICALINO DI OUTPUT (settare diversamente ad esempio fare on off quando è finito)
-			counter_reset: out std_logic);						-- resets the counter on state change
+			counter_reset: out std_logic;						   -- resets the counter on state change
+			bcd_out: out std_logic_vector(3 downto 0));     -- 7seg bcd controller
 
 	
 end clothes_washer;
@@ -122,12 +123,12 @@ next_state_logic: process(state_current, door_open, spin_dry, start_wash)
 
 		when zero =>
 			if door_open = '1' then
-				if start_wash = '0' then
-					state_next <= zero;
-				end if;
+				state_next <= zero;
 			elsif door_open = '0'  then
 				if start_wash='1' then
 					state_next <= one;
+				elsif start_wash = '0' then
+					state_next <= zero;
 				end if;
 			end if;
 
@@ -211,6 +212,8 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
+				bcd_out<="0000";
+				
 
 			when one =>
 				door_lock <='1';
@@ -220,6 +223,8 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="11";
 				state_LED<='1';
+				bcd_out<="0001";
+
 
 			when two =>
 				door_lock <='1';
@@ -229,6 +234,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="10";
 				state_LED<='1';
+				bcd_out<="0010";
 
 			when three =>
 				door_lock <='1';
@@ -238,6 +244,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0011";
 
 			when four =>
 				door_lock <='1';
@@ -247,6 +254,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0100";
 
 			when five =>
 				door_lock <='1';
@@ -256,6 +264,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0101";
 
 			when six =>
 				door_lock <='1';
@@ -265,6 +274,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0110";
 
 			when seven =>
 				door_lock <='1';
@@ -274,6 +284,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0111";
 				
 			when eigth =>
 				door_lock <='0';
@@ -283,6 +294,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<=clk;
+				bcd_out<="1000";
 				
 			when others =>
 				door_lock <='0';
@@ -292,6 +304,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
+				bcd_out<="1111";
 
 			end case;
 			
@@ -307,6 +320,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
+				bcd_out<="0000";
 
 			when one =>
 				door_lock <='1';
@@ -316,6 +330,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="11";
 				state_LED<='1';
+				bcd_out<="0001";
 
 			when two =>
 				door_lock <='1';
@@ -325,6 +340,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="10";
 				state_LED<='1';
+				bcd_out<="0010";
 
 			when three =>
 				door_lock <='1';
@@ -334,6 +350,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0011";
 
 			when four =>
 				door_lock <='1';
@@ -343,6 +360,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0100";
 
 			when five =>
 				door_lock <='1';
@@ -352,6 +370,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0101";
 
 			when six =>
 				door_lock <='1';
@@ -361,6 +380,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0110";
 
 			when seven =>
 				door_lock <='1';
@@ -370,6 +390,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0111";
 				
 			when eigth =>
 				door_lock <='0';
@@ -379,6 +400,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<=clk;
+				bcd_out<="1000";
 			
 			when others =>
 				door_lock <='0';
@@ -388,6 +410,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
+				bcd_out<="1111";
 
 			end case;
 			
@@ -403,6 +426,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
+				bcd_out<="0000";
 				
 			when one =>
 				door_lock <='1';
@@ -412,6 +436,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="11";
 				state_LED<='1';
+				bcd_out<="0001";
 
 			when two =>
 				door_lock <='1';
@@ -421,6 +446,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="10";
 				state_LED<='1';
+				bcd_out<="0010";
 
 			when three =>
 				door_lock <='1';
@@ -430,6 +456,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0011";
 
 			when four =>
 				door_lock <='1';
@@ -439,6 +466,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0100";
 
 			when five =>
 				door_lock <='1';
@@ -448,6 +476,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0101";
 
 			when six =>
 				door_lock <='1';
@@ -457,6 +486,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0110";
 
 			when seven =>
 				door_lock <='1';
@@ -466,6 +496,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0111";
 				
 			when eigth =>
 				door_lock <='0';
@@ -475,6 +506,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<=clk;
+				bcd_out<="1000";
 				
 			when others =>
 				door_lock <='0';
@@ -484,6 +516,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
+				bcd_out<="1111";
 
 			end case;
 			
@@ -499,6 +532,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
+				bcd_out<="0000";
 
 			when one =>
 				door_lock <='1';
@@ -508,6 +542,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0001";
 
 			when two =>
 				door_lock <='1';
@@ -517,6 +552,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0010";
 
 			when three =>
 				door_lock <='1';
@@ -526,6 +562,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0011";
 
 			when four =>
 				door_lock <='1';
@@ -535,6 +572,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0100";
 				
 			when five =>
 				door_lock <='1';
@@ -544,6 +582,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0101";
 
 			when six =>
 				door_lock <='1';
@@ -553,6 +592,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0110";
 
 			when seven =>
 				door_lock <='1';
@@ -562,6 +602,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='1';
 				temperature<="00";
 				state_LED<='1';
+				bcd_out<="0111";
 				
 			when eigth =>
 				door_lock <='0';
@@ -571,6 +612,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<=clk;
+				bcd_out<="1000";
 				
 			when others =>
 				door_lock <='0';
@@ -580,6 +622,7 @@ output_logic:process(reset,state_current,clk,mode)
 				drain<='0';
 				temperature<="00";
 				state_LED<='0';
+				bcd_out<="1111";
 
 			end case;
 			
@@ -590,6 +633,7 @@ output_logic:process(reset,state_current,clk,mode)
 				rotate_drum<="00";
 				drain<='0';
 				temperature<="00";
+				bcd_out<="1111";
 				
 		end case;
 		
@@ -600,6 +644,7 @@ output_logic:process(reset,state_current,clk,mode)
 			rotate_drum<="00";
 			drain<='0';
 			temperature<="00";
+			bcd_out<="1111";
 		end if;
 	end process;
 
