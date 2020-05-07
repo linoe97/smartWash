@@ -12,7 +12,7 @@ end frequency_divider;
 
 architecture Behavioral of frequency_divider is
 	
-	signal temporal: STD_LOGIC
+	signal temporal: STD_LOGIC;
 	signal counter : integer range 0 to 15;
 	
 	begin
@@ -20,7 +20,7 @@ architecture Behavioral of frequency_divider is
 	   if (reset = '1') then
             temporal <= '0';
             counter <= 0;
-		 elsif rising_edge(clk) then
+		 elsif rising_edge(clk_in) then
 			  if (counter= 15) then
 					counter <= 0;
 					temporal <= NOT(temporal);

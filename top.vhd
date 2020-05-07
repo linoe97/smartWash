@@ -60,7 +60,7 @@ architecture bh of top is
 	
 	
 	component frequency_divider is
-    port ( clk							: in std_logic;					 -- clock input
+    port ( clk_in							: in std_logic;					 -- clock input
            reset						: in std_logic;	     			 -- reset input 
            clk_out					: out std_logic		 			 -- output
      );
