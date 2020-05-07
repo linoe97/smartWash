@@ -57,21 +57,30 @@ architecture bh of top is
 		);
 	end component;
 	
+	
+	
+	component frequency_divider is
+    port ( clk							: in std_logic;					 -- clock input
+           reset						: in std_logic;	     			 -- reset input 
+           clk_out					: out std_logic		 			 -- output
+     );
+	end component;
+	
 	component count4 is
-		port ( clk: in std_logic; 									-- clock input
-           manual_reset: in std_logic; 						-- reset input 
-			  auto_reset: in std_logic; 							-- reset from state change
-           counter: out std_logic_vector(3 downto 0) 		-- output 4-bit counter
+		port ( clk						: in std_logic; 									-- clock input
+           manual_reset				: in std_logic; 									-- reset input 
+			  auto_reset				: in std_logic; 									-- reset from state change
+           counter					: out std_logic_vector(3 downto 0) 			-- output 4-bit counter
 		);
 	end component;
 	
 	component pwm is
-		generic (n : integer := 2; -- 4 bit resolution
-               clock_div : integer := 4  --frequency divider rate (to set output frequency)
+		generic (n 						: integer := 2; 					-- 4 bit resolution
+               clock_div 			: integer := 4  					--frequency divider rate (to set output frequency)
       );
-		port (clk, reset : in std_logic;
-            duty : in std_logic_vector (n-1 downto 0);
-            pwm_out : out std_logic
+		port (clk, reset 				: in std_logic;
+            duty 						: in std_logic_vector (n-1 downto 0);
+            pwm_out 					: out std_logic
       );
 	end component;
 	   
@@ -79,11 +88,11 @@ architecture bh of top is
 	
 	
 	component bcd_7seg is
-		port (BCD : in STD_LOGIC_VECTOR (3 downto 0);
-					sev_seg : out STD_LOGIC_VECTOR (6 downto 0)
-			);
+		port (BCD 					: in STD_LOGIC_VECTOR (3 downto 0);
+				sev_seg 				: out STD_LOGIC_VECTOR (6 downto 0));
 	end component;
 	
+	signal divided_clk			: std_logic;
 	signal reset_counter			: std_logic;
 	signal timerr 					: std_logic_vector(3 downto 0);
 	signal drum_velocity_duty 	: std_logic_vector(1 downto 0);
@@ -95,7 +104,8 @@ architecture bh of top is
 	
 	
 	cloth_wash: clothes_washer port map (timerr,clk,spin_dry,start_wash,Door_open,reset,mode,door_lock,water_pump,soap,temp_duty,drum_velocity_duty,drain,state_LED,reset_counter,BCD_sign);
-	timer: count4 port map (clk,reset,reset_counter,timerr);
+	frequ_div: frequency_divider port map (clk, reset, divided_clk);
+	timer: count4 port map (divided_clk,reset,reset_counter,timerr);
 	pwm_drum: pwm
 		generic map (n=>n,clock_div=>clock_div)
 		port map (clk=>clk, reset=>reset, duty=>drum_velocity_duty, pwm_out=>rotate_drum_PWM_OUT);
