@@ -4,17 +4,15 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.NUMERIC_STD.ALL; 
  
 entity frequency_divider is
-    Port ( clk_in: in std_logic;				 -- clock input
-           reset: in std_logic;	       -- reset input 
-           clk_out: out std_logic		 -- output
+    Port ( clk_in: in std_logic;		 -- clock input
+           reset: in std_logic;	    -- reset input 
+           clk_out: out std_logic    -- output
      );
 end frequency_divider;
 
 architecture Behavioral of frequency_divider is
-	
 	signal temporal: STD_LOGIC;
 	signal counter : integer range 0 to 15;
-	
 	begin
 	freq_div: process (reset, clk_in) begin
 	   if (reset = '1') then
@@ -29,6 +27,5 @@ architecture Behavioral of frequency_divider is
 			  end if;
 		 end if;
 	end process;
-	
 	clk_out <= temporal;
 end Behavioral;

@@ -12,8 +12,8 @@ entity top is
 	port(
 		--INPUT
 			clk: in std_logic;	         						-- INVECE DEL CLOCK N BIT DI TIMER
-			spin_dry: std_logic; 									-- asciuga ON/OFF
-			start_wash: std_logic; 									-- START
+			spin_dry: in std_logic; 								-- asciuga ON/OFF
+			start_wash: in std_logic; 						-- START
 			Door_open: in std_logic; 								-- SENSORE PORTA
 			reset: in std_logic;    								-- RESET (UNICO PER TUTTI E 3 I COMPONENTI)
 			mode: in std_logic_vector(1 downto 0); 			-- 3 o 4 differenti modalità (normale, full power, eco e lana(wool) )
@@ -38,9 +38,10 @@ architecture bh of top is
 		port(
 		--inputs
 			timer: in std_logic_vector(3 downto 0);			-- dal timer 4bit
-			clk: in std_logic;	         						-- INVECE DEL CLOCK N BIT DI TIMER
-			spin_dry: std_logic; 									-- asciuga ON/OFF
-			start_wash: std_logic; 									-- START
+			slow_clk: in std_logic;	         					-- clock form clock divder
+			fast_clk: in std_logic;									-- fast external clock not divided
+			spin_dry: in std_logic; 									-- asciuga ON/OFF
+			start_wash: in std_logic; 									-- START
 			Door_open: in std_logic; 								-- SENSORE PORTA
 			reset: in std_logic;    								-- RESET
 			mode: in std_logic_vector(1 downto 0); 			-- 3 o 4 differenti modalità (normale, full power, eco e lana(wool) )			
@@ -67,7 +68,7 @@ architecture bh of top is
 	end component;
 	
 	component count4 is
-		port ( clk						: in std_logic; 									-- clock input
+		port ( clk: in std_logic;    -- clock input
            manual_reset				: in std_logic; 									-- reset input 
 			  auto_reset				: in std_logic; 									-- reset from state change
            counter					: out std_logic_vector(3 downto 0) 			-- output 4-bit counter
@@ -100,12 +101,12 @@ architecture bh of top is
 	signal BCD_sign				: std_logic_vector(3 downto 0);
 	
 	
-	begin 
+begin 
 	
 	
-	cloth_wash: clothes_washer port map (timerr,clk,spin_dry,start_wash,Door_open,reset,mode,door_lock,water_pump,soap,temp_duty,drum_velocity_duty,drain,state_LED,reset_counter,BCD_sign);
 	frequ_div: frequency_divider port map (clk, reset, divided_clk);
-	timer: count4 port map (divided_clk,reset,reset_counter,timerr);
+	cloth_wash: clothes_washer port map (timerr,divided_clk,clk,spin_dry,start_wash,Door_open,reset,mode,door_lock,water_pump,soap,temp_duty,drum_velocity_duty,drain,state_LED,reset_counter,BCD_sign);
+	timer: count4 port map (clk,reset,reset_counter,timerr);
 	pwm_drum: pwm
 		generic map (n=>n,clock_div=>clock_div)
 		port map (clk=>clk, reset=>reset, duty=>drum_velocity_duty, pwm_out=>rotate_drum_PWM_OUT);
@@ -114,4 +115,4 @@ architecture bh of top is
 		port map (clk=>clk, reset=>reset,duty=>temp_duty,pwm_out=>temperature_PWM_OUT);
 	bcd_sev_seg: bcd_7seg port map (BCD_sign, sev_seg);
 	
-	end;
+end bh;
