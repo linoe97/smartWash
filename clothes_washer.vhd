@@ -16,11 +16,6 @@ entity clothes_washer is
 			reset: in std_logic;    								-- RESET
 			mode: in std_logic_vector(1 downto 0); 			-- 3 o 4 differenti modalità (normale, full power, eco e lana(wool) )
 			
-			--inserire un input di timer (durata di ogni stato) anzichè il clock
-			--e fare in modo che per ogni modalità ci sia una differente durata
-			--when 0010
-			--when 0111
-			--when 1111
 
 		--outputs							
 			door_lock: out std_logic;								-- BLOCCO PORTO
@@ -44,8 +39,6 @@ signal state_current, state_next: state_type;
 
 begin
 
-
-
 reset_auto: process(state_current)
 begin
 		if state_current=zero or state_current=eigth then
@@ -56,7 +49,6 @@ begin
 			counter_reset<='1';
 		end if;
 end process;
-
 
 
 State_register : process(fast_clk)
@@ -686,30 +678,3 @@ output_logic:process(reset,state_current,mode)
 	end process;
 
 end behavior;
-
-
---SEQUENCE WHEN NOT spin dry
---                                 decimal equivalent
---            0 0 1 X  0 0 0 0 0   =>0
---            0 0 0 0  0 0 0 0 0   =>0
---            0 1 0 1  0 0 0 0 0 =>0
---Wash fill   1 2 X X  1 1 1 0 0 =>28
---Wash spin   2 3 X X  1 0 0 1 0 =>18
---Drain       3 4 X X  1 0 0 0 1 =>17
---Rinse fill  4 5 X X  1 1 0 0 0 =>24
---Rinse spin  5 6 X X  1 0 0 1 0 =>18
---not Drain   6 0 X 0  1 0 0 0 1 =>17
---            0 0 0 0  0 0 0 0 0   =>0
-
---SEQUENCE WHEN spin dry
---            0 0 1 X  0 0 0 0 0   =>0
---            0 0 0 0  0 0 0 0 0   =>0
---            0 1 0 1  0 0 0 0 0 =>0
---Wash fill   1 2 X X  1 1 1 0 0 =>28
---Wash spin   2 3 X X  1 0 0 1 0 =>18
---Drain       3 4 X X  1 0 0 0 1 =>17
---Rinse fill  4 5 X X  1 1 0 0 0 =>24
---Rinse spin  5 6 X X  1 0 0 1 0 =>18
---Drain       6 7 X 1  1 0 0 0 1 =>17
---Spin dry    7 0 X X 1 0 0 1 1 =>19
---            0 0 0 0  0 0 0 0 0   =>0

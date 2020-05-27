@@ -1,6 +1,3 @@
---code from https://www.marcelcases.com/projects/a-pwm-generator-in-VHDL/
-
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
